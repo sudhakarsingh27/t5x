@@ -54,6 +54,7 @@ setuptools.setup(
         f'jax >= {_jax_version}',
         f'jaxlib >= {_jaxlib_version}',
         'numpy',
+        'orbax',
         'seqio-nightly',
         't5',
         'tensorflow',
