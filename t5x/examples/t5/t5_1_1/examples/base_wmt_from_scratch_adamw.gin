@@ -1,0 +1,28 @@
+from __gin__ import dynamic_registration
+
+from t5x import optimizers
+from t5x import utils
+
+include "t5x/examples/t5/t5_1_1/examples/base_wmt_from_scratch.gin"
+
+# This gin file is to show how to switch to an optimizer other than
+# adafactor. Gin configuration makes it easy by simply importing any available
+# optimizer in t5x/optimizers module. Note the optimizers in t5x/optimizers are
+# wrapped version of optimizers implemented in optax.
+
+# In this case, we choose to switch to the AdamW optimizer.
+OPTIMIZER = @optimizers.adamw()
+optimizers.adamw:
+  # Unlike adafactor, optimizers from optax require to specify
+  # `learning_rate`. Since `learning_rate` is actually set by
+  # `Trainer.learning_rate_fn` during training, the `learning_rate` here
+  # is just a dummy value to instantiate the optimizer legally.
+  learning_rate = 1.0
+  weight_decay = 0.01
+
+# We specify the learning rate scheduler which is used to create
+# `Trainer.learning_rate_fn`.
+utils.create_learning_rate_scheduler:
+  factors = 'constant * rsqrt_decay'
+  base_learning_rate = 1.0
+  warmup_steps = 10000

@@ -37,6 +37,7 @@ import jax.numpy as jnp
 import numpy as np
 import seqio
 from t5x import models
+from t5x import optimizers
 from t5x import partitioning
 from t5x import train_state as train_state_lib
 from t5x import trainer as trainer_lib
@@ -313,6 +314,11 @@ def train(
       k: v.dtype.as_numpy_dtype() for k, v in train_ds.element_spec.items()
   }
   init_or_restore_tick = time.time()
+
+  if isinstance(model.optimizer_def, optimizers.OptaxWrapper):
+    logging.warning(
+        'The learning rate specified for the Optax optimizer may be '
+        'over-written by utils.create_learning_rate_scheduler.')
   train_state_initializer = utils.TrainStateInitializer(
       optimizer_def=model.optimizer_def,
       init_fn=model.get_initial_variables,
