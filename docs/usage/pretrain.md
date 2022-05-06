@@ -206,27 +206,22 @@ brief description of these configs:
 A training run may consist of various randomized operations, e.g. dataset
 shuffling, dropout, etc. However, it is often useful to have deterministic
 training, meaning that the random operations are reproducible and robust to
-preemption/restarts. To make your pretraining deterministic, use
+preemption/restarts. To make your pretraining deterministic, first we need
+to construct deterministic tasks or mixtures with [Deterministic
+SeqIO](go/deterministic-seqio-readme) and update `MIXTURE_OR_TASK_NAME` entry in
+Step 3 above. Then we use
 [`t5x/configs/runs/pretrain_deterministic.gin`](https://github.com/google-research/t5x/tree/main/t5x/configs/runs/pretrain_deterministic.gin)
 instead of `pretrain.gin` in Steps 3 and 4 above.
 
 In addition to the params configured in `pretrain.gin`,
 `pretrain_deterministic.gin` does the following:
 
-+   sets the dataset seed to a fixed value: `train/utils.DatasetConfig.seed =
-    42`.
 +   sets the dropout seed to a fixed value: `train_script.train.random_seed =
-    42`. However, the dropout state is currently not maintained after restart
-    (b/190056363).
-+   enables dataset checkpointing: `utils.SaveCheckpointConfig.save_dataset =
-    True`. This means that the dataset iterator is checkpointed periodically
-    during training, and in case of preemptions, training resumes from the
-    latest dataset checkpoint to ensure deterministic behavior. The
-    checkpointing frequency is set using `utils.SaveCheckpointConfig.period`
-    (`1000` by default), meaning that the dataset is checkpointed after
-    processing `1000` batches (batches, not examples; batch size can be
-    overridden using `train/DatasetConfig.batch_size` and is set to `128` by
-    default).
+    42`.
++   disables packing and shuffling the dataset: `train/utils.DatasetConfig.pack
+    = False`, `train/utils.DatasetConfig.shuffle = False`.
++   uses a deterministic dataset getter: `train_script.train.get_dataset_fn =
+    @utils.get_deterministic_dataset`
 
 
 ### Defining a custom SeqIO Task/Mixture to pretrain on {.no-toc}
